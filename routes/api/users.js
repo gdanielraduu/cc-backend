@@ -6,21 +6,24 @@ var auth = require('../auth');
 
 router.get('/',function(req,res,next)
 {
-
+  res.send("gg");
 });
 
+// SignUP LOCAL
 router.post('/users', function(req, res, next){
     var user = new User();
     console.log(req)
-    user.username = req.body.user.username;
-    user.email = req.body.user.email;
-    user.setPassword(req.body.user.password);
+    user.local.method = 'local';
+    user.local.username = req.body.user.local.username;
+    user.local.email = req.body.user.local.email;
+    user.setPassword(req.body.user.local.password);
 
     user.save().then(function() {
         return res.json({user: user.toAuthJWT()});
     }).catch(next);
 });
 
+// LOG IN LOCAL
 router.post('/users/login', function(req, res, next){
     if(!req.body.user.email){
       return res.status(422).json({errors: {email: "can't be blank"}});
@@ -41,6 +44,14 @@ router.post('/users/login', function(req, res, next){
       }
     })(req, res, next);
   });
+
+  router.get('/users/google', passport.authenticate('google', {
+    scope : ['profile']
+  }));
+
+  router.get('/users/google/redirect', passport.authenticate('google') ,(req, res) => {
+    res.send('you reached the redirect URI');
+});
 
   router.get('/user', auth.required, function(req, res, next){
     User.findById(req.payload.id).then(function(user){

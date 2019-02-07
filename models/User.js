@@ -6,33 +6,54 @@ var secret = require('../config').secret;
 
 var Schema = mongoose.Schema;
 var UserSchema = new Schema({
-  username: {
-    type: String, 
-    unique: true, 
-    lowercase: true, 
-    required: [true, "can't be"], 
-    index: true
+  method: {
+    type : String,
+    enum : ['local' ,'google', 'facebook'],
+    required : true
   },
-  email: {
-    type: String, unique: true, 
-    lowercase: true, 
-    required: [true, "can't be"], 
-    match: [/\S+@\S+\.\S+/, 'is invalid'],
-    index: true},
-  hash: String,
-  salt: String
+  local : {
+    username: {
+      type: String, 
+      unique: true, 
+      lowercase: true, 
+      required: [true, "can't be"], 
+      index: true
+    },
+    email: {
+      type: String, unique: true, 
+      lowercase: true, 
+      required: [true, "can't be"], 
+      match: [/\S+@\S+\.\S+/, 'is invalid'],
+      index: true},
+    hash: String,
+    salt: String
+  },
+  google: {
+    googleId : { type : String },
+    email : {
+      type : String,
+      lowercase: true
+    }
+  },
+  facebook: {
+    id : { type : String },
+    email : {
+      type : String,
+      lowercase: true
+    }
+  }
 }, {timestamps: true});
 
 UserSchema.plugin(uniqueValidator, {message: 'is taken'});
 
 UserSchema.methods.validPassword = function(password) {
-  var hash = crypto.pbkdf2Sync(password, this.salt, 10000, 512, 'sha512').toString('hex');
-  return this.hash === hash;
+  var hash = crypto.pbkdf2Sync(password, this.local.salt, 10000, 512, 'sha512').toString('hex');
+  return this.local.hash === hash;
 };
 
 UserSchema.methods.setPassword = function(password){
-  this.salt = crypto.randomBytes(16).toString();
-  this.hash = crypto.pbkdf2Sync(password, this.salt, 10000, 512, 'sha512').toString('hex');
+  this.local.salt = crypto.randomBytes(16).toString();
+  this.local.hash = crypto.pbkdf2Sync(password, this.local.salt, 10000, 512, 'sha512').toString('hex');
 };
 UserSchema.methods.generateJWT = function() {
   var today = new Date();
@@ -41,7 +62,7 @@ UserSchema.methods.generateJWT = function() {
 
   return jwt.sign({
     id: this._id,
-    username: this.username,
+    username: this.local.username,
     exp: parseInt(exp.getTime() / 1000)
   }
   , secret);
@@ -49,8 +70,8 @@ UserSchema.methods.generateJWT = function() {
 
 UserSchema.methods.toAuthJWT = function() {
   return {
-    username: this.username,
-    email: this.email,
+    username: this.local.username,
+    email: this.local.email,
     token: this.generateJWT()
   };
 };
