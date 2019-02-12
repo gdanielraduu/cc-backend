@@ -6,28 +6,23 @@ var secret = require('../config').secret;
 
 var Schema = mongoose.Schema;
 var UserSchema = new Schema({
-  method: {
-    type : String,
-    enum : ['local' ,'google', 'facebook'],
-    required : true
+  username: {
+    type: String, 
+    unique: false, 
+    lowercase: true, 
+    required: [true, "can't be"], 
+    index: false
   },
-  local : {
-    username: {
-      type: String, 
-      unique: true, 
-      lowercase: true, 
-      required: [true, "can't be"], 
-      index: true
-    },
-    email: {
-      type: String, unique: true, 
-      lowercase: true, 
-      required: [true, "can't be"], 
-      match: [/\S+@\S+\.\S+/, 'is invalid'],
-      index: true},
-    hash: String,
-    salt: String
+  email: {
+    type: String, unique: true, 
+    lowercase: true, 
+    required: [true, "can't be"], 
+    match: [/\S+@\S+\.\S+/, 'is invalid'],
+    index: true
   },
+  hash: String,
+  salt: String,
+      
   google: {
     googleId : { type : String },
     email : {
@@ -69,6 +64,7 @@ UserSchema.methods.generateJWT = function() {
 };
 
 UserSchema.methods.toAuthJWT = function() {
+  console.log('TESTT');
   return {
     username: this.local.username,
     email: this.local.email,

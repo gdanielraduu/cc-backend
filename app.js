@@ -16,7 +16,14 @@ var isProduction = process.env.NODE_ENV === 'production';
 // Create global app object
 var app = express();
 
-app.use(cors());
+//app.use(cors());
+app.use(function(req, res, next) {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE');
+  res.header('Access-Control-Allow-Headers', '*');
+  next();
+});
+
 
 // Normal express config defaults
 app.use(require('morgan')('dev'));
@@ -27,7 +34,7 @@ app.use(require('method-override')());
 app.use(express.static(__dirname + '/public'));
 
 app.use(session({ secret: 'conduit', cookie: { maxAge: 60000 }, resave: false, saveUninitialized: false  }));
-
+app.use(passport.initialize());
 if (!isProduction) {
   app.use(errorhandler());
 }

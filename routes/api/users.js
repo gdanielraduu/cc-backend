@@ -12,8 +12,8 @@ router.get('/',function(req,res,next)
 // SignUP LOCAL
 router.post('/users', function(req, res, next){
     var user = new User();
-    console.log(req)
-    user.local.method = 'local';
+    console.log(req.body.method)
+    user.method = 'local';
     user.local.username = req.body.user.local.username;
     user.local.email = req.body.user.local.email;
     user.setPassword(req.body.user.local.password);
@@ -46,12 +46,22 @@ router.post('/users/login', function(req, res, next){
   });
 
   router.get('/users/google', passport.authenticate('google', {
-    scope : ['profile']
+    scope : ['email']
   }));
 
   router.get('/users/google/redirect', passport.authenticate('google') ,(req, res) => {
     res.send('you reached the redirect URI');
 });
+
+
+router.get('/users/facebook', passport.authenticate('facebook', { scope : ['public_profile', 'email'] }));
+
+// handle the callback after facebook has authenticated the user
+router.get('/users/facebook/redirect',
+    passport.authenticate('facebook', {
+        successRedirect : '/profile',
+        failureRedirect : '/'
+    }));
 
   router.get('/user', auth.required, function(req, res, next){
     User.findById(req.payload.id).then(function(user){
