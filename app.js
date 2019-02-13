@@ -8,33 +8,40 @@ var fs = require('fs'),
     cors = require('cors'),
     passport = require('passport'),
     errorhandler = require('errorhandler'),
+    cookieParser = require('cookie-parser'),
     mongoose = require('mongoose');
     require('./models/User');
 
+  
+
+    var sessionOpts = {
+      saveUninitialized: true, // saved new sessions
+      resave: false, // do not automatically write to the session store
+      
+      secret: 'conduit',
+      cookie : { httpOnly: true, maxAge: 2419200000 } // configure when sessions expires
+    }
 var isProduction = process.env.NODE_ENV === 'production';
 
 // Create global app object
 var app = express();
 
-//app.use(cors());
-app.use(function(req, res, next) {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE');
-  res.header('Access-Control-Allow-Headers', '*');
-  next();
-});
+app.use(cors());
+
 
 
 // Normal express config defaults
 app.use(require('morgan')('dev'));
-app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: false }));
 
 app.use(require('method-override')());
 app.use(express.static(__dirname + '/public'));
+app.use(cookieParser(sessionOpts.secret))
+app.use(session(sessionOpts))
+app.use(passport.initialize())
+app.use(passport.session())
 
-app.use(session({ secret: 'conduit', cookie: { maxAge: 60000 }, resave: false, saveUninitialized: false  }));
-app.use(passport.initialize());
 if (!isProduction) {
   app.use(errorhandler());
 }

@@ -7,11 +7,15 @@ var User = mongoose.model('User');
 var configAuth = require('./auth');
 
 passport.serializeUser(function(user, done) {
+  console.log('ser');
   done(null, user);
 });
 
-passport.deserializeUser(function(user, done) {
-  done(null, user);
+passport.deserializeUser(function(id, done){
+  console.log('dese');
+  User.findById(id, function(err, user){
+      done(err, user);
+  });
 });
 passport.use(new LocalStrategy({
   usernameField: 'user[email]',
@@ -36,6 +40,7 @@ passport.use(new GoogleStrategy({
                         {"email": profile.emails[0].value}
                       ]
     }).then((currentUser) => {
+        console.log('TTTTTTTTT')
         if(currentUser) {
           if (currentUser.google.googleId == undefined) {
               currentUser.google.googleId = profile.id;
@@ -43,7 +48,8 @@ passport.use(new GoogleStrategy({
               currentUser.save();
               return done(null, currentUser)
             }
-         return done(null, false, {errors: {'email or password': 'is invalid'}});
+            console.log('!!!!!!!!!!!');
+         return done(null, currentUser);
         } else {
             const newUser = new User({
               username: 'google1',
@@ -80,7 +86,7 @@ passport.use(new FacebookStrategy({
               currentUser.save();
               return done(null, currentUser)
             }
-         return done(null, false, {errors: {'email or password': 'is invalid'}});
+         return done(null, currentUser);
         } else {
             const newUser = new User({
               username: 'face6',

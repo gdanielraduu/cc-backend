@@ -50,7 +50,9 @@ router.post('/users/login', function(req, res, next){
   }));
 
   router.get('/users/google/redirect', passport.authenticate('google') ,(req, res) => {
-    res.send('you reached the redirect URI');
+    console.log(req.isAuthenticated())
+    console.log(req.session);
+    res.redirect('http://localhost:4200/register');
 });
 
 
@@ -61,7 +63,14 @@ router.get('/users/facebook/redirect',
     passport.authenticate('facebook', {
         successRedirect : '/profile',
         failureRedirect : '/'
-    }));
+    }),(req,res)=>{console.log(req.user.access_token)});
+
+router.get('/logout', function(req, res){
+  console.log(req.isAuthenticated());
+  req.logout();
+  console.log(req.isAuthenticated());
+  res.redirect('http://localhost:4200/register');
+});
 
   router.get('/user', auth.required, function(req, res, next){
     User.findById(req.payload.id).then(function(user){
